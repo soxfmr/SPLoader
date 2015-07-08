@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.063,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\HttpLib.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.917,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\TestContentValue.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.899,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\Project1.dproj=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\SPLoader.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.273,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.755,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.203,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\TestContentValue.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.073,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\Unit1.dfm=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Main.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.249,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\SyncLib.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\HttpLib.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.829,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.648,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Utils.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Pair.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.073,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Main.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.354,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.168,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\PropertyInfo.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.782,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\ServerPropertyLoader.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.593,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Utils.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.773,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\HashMap.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\ContentValue.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.678,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\GlobalSettings.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.161,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\ServerInfo.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.734,C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\HashMap.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.636,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.534,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.551,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.261,=C:\Users\Yu\Documents\Embarcadero\Studio\Projects\SPLoader\Unit1.pas</Transaction>
+  </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="Main.pas"/>
+    <File Path="Main.dfm"/>
+    <File Path="Pair.pas"/>
+    <File Path="ServerPropertyLoader.pas"/>
+    <File Path="PropertyInfo.pas"/>
+    <File Path="GlobalSettings.pas"/>
+    <File Path="ContentValue.pas"/>
+    <File Path="ServerInfo.pas"/>
+    <File Path="SyncLib.pas"/>
+  </ProjectSortOrder>
+</BorlandProject>

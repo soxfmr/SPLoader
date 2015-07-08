@@ -1,0 +1,19 @@
+unit HashMap;
+
+interface
+
+type
+  THashMap = class(TObject)
+    public
+      constructor Create;
+      procedure Add(key, value: TObject);
+      procedure Clear();
+      function Get(key: TObject): TObject; overload;
+      function Get(key, defalutValue: TObject): TObject; overload;
+      function Count(): Integer;
+      function ContaineKey(): Boolean;
+  end;
+
+implementation
+
+end.

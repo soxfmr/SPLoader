@@ -1,0 +1,66 @@
+unit SyncLib;
+
+interface
+
+uses
+  Windows,
+  Classes,
+  IDHTTP;
+
+type
+  TSyncData = record
+    IPAddrsss : String;
+    Port: String;
+    Name: String;
+  end;
+
+  TSyncLib = class(TObject)
+    function Sync(Data: TSyncData; callback: Pointer): Boolean;
+    function CheckResult(Content: String): Boolean;
+  end;
+
+const
+  SYNC_URL  = 'http://paintor.sinaapp.com/synclib.php';
+  SYNC_AUTH = '773c22cf033f3af295e9248c6cf8af89';
+
+implementation
+
+function TSyncLib.Sync(Data: TSyncData; callback: Pointer): Boolean;
+var
+  Conn: TIDHTTP;
+  szData: TStringList;
+  Content: String;
+begin
+  Result:= False;
+
+  Conn := TIDHTTP.Create(Nil);
+  szData:= TStringList.Create;
+  try
+  try
+    szData.Add('ipaddress=' + data.IPAddrsss);
+    szData.Add('port=' + data.Port);
+    szData.Add('name=' + data.Name);
+    szData.Add('act=update');
+    szData.Add('auth=' + SYNC_AUTH);
+
+    Conn.ReadTimeout:= 20000;
+    Content:= Conn.Post(SYNC_URL, szData);
+
+    Result:= CheckResult(Content);
+  except
+    // Something wrong
+  finally
+    Conn.Free;
+  end;
+end;
+
+function TSyncLib.CheckResult(Content: String): Boolean;
+begin
+  Result:= False;
+  if Pos('{"result":true}', Content) <> -1 then
+  begin
+    Result:= True;
+  end;
+end;
+
+end.

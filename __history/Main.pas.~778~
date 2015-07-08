@@ -1,0 +1,371 @@
+unit Main;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
+  System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ServerPropertyLoader, PropertyInfo,
+  GlobalSettings, ContentValue, ServerInfo, SyncLib,
+  Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Buttons, FireDAC.VCLUI.Memo,
+  Vcl.ExtDlgs, IdBaseComponent, IdComponent, IdIPWatch;
+
+type
+  TMainForm = class(TForm)
+    gpServer: TGroupBox;
+    Label1: TLabel;
+    Label2: TLabel;
+    edServerAddress: TEdit;
+    edServerPort: TEdit;
+    gpGame: TGroupBox;
+    Label3: TLabel;
+    Label4: TLabel;
+    combMode: TComboBox;
+    combDifficult: TComboBox;
+    cboxFriendlyFire: TCheckBox;
+    cboxFlight: TCheckBox;
+    cboxNether: TCheckBox;
+    cboxAnimals: TCheckBox;
+    cboxNpcs: TCheckBox;
+    cboxMonsters: TCheckBox;
+    Label5: TLabel;
+    edMaxPlayers: TEdit;
+    edServerDescript: TEdit;
+    Label6: TLabel;
+    OpenDlg: TOpenDialog;
+    gpAdvance: TGroupBox;
+    Label7: TLabel;
+    Label8: TLabel;
+    btnStart: TButton;
+    memoLogContainer: TMemo;
+    edPropertisFile: TEdit;
+    btnOpenPropertisFile: TButton;
+    btnOpenServerFile: TButton;
+    edServerFile: TEdit;
+    btnSave: TButton;
+    idIPWatcher: TIdIPWatch;
+    procedure ShowLog(log: String);
+    procedure ShowDlg(log: String);
+    procedure Initial();
+    procedure Release();
+    procedure LoadingSettings;
+    procedure LoadingPropertis(fn: String);
+    procedure InitComboBox(TargetComboBox: TComboBox; Data: TContentValue;
+      defaultIndex: Integer = 0);
+    procedure Render();
+    procedure SyncServerInfo();
+    procedure btnOpenPropertisFileClick(Sender: TObject);
+    procedure btnOpenServerFileClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    function SavePropertis(): Boolean;
+    function StartServer(): Boolean;
+    procedure btnSaveClick(Sender: TObject);
+    procedure btnStartClick(Sender: TObject);
+  private
+    mPropertisFileName: String;
+    mServerFileName: String;
+  public
+    SPLoader: TServerPropertyLoader;
+  end;
+
+var
+  MainForm: TMainForm;
+  GlobalSettings: TGlobalSettings;
+
+implementation
+
+{$R *.dfm}
+
+function ThreadProc(Param: Pointer): DWORD; stdcall;
+var
+  Data: TSyncData;
+  SyncLib: TSyncLib;
+  Ret: Boolean;
+begin
+  SyncLib := TSyncLib.Create;
+  try
+    Data.IPAddrsss := MainForm.edServerAddress.Text;
+    Data.Port := MainForm.edServerPort.Text;
+    Data.Name := MainForm.SPLoader.GetPropertyValue(PI_WORLD_NAME);
+
+    Ret := SyncLib.Sync(Data, NIL);
+    if Ret then
+      MainForm.ShowLog('信息已更新至服务器...')
+    else
+      MainForm.ShowLog('更新至服务器失败...');
+  finally
+    SyncLib.Free;
+  end;
+
+  Result := 0;
+end;
+
+procedure TMainForm.btnOpenPropertisFileClick(Sender: TObject);
+begin
+  if OpenDlg.Execute then
+  begin
+    If FileExists(OpenDlg.FileName) Then
+    begin
+      mPropertisFileName := OpenDlg.FileName;
+      edPropertisFile.Text := mPropertisFileName;
+
+      // 重新载入配置
+      LoadingPropertis(mPropertisFileName);
+    end;
+  end;
+end;
+
+procedure TMainForm.btnOpenServerFileClick(Sender: TObject);
+begin
+  if OpenDlg.Execute then
+  begin
+    If FileExists(OpenDlg.FileName) Then
+    begin
+      mServerFileName := OpenDlg.FileName;
+      edServerFile.Text := mServerFileName;
+    end;
+  end;
+end;
+
+procedure TMainForm.btnSaveClick(Sender: TObject);
+begin
+  if Not SavePropertis then
+  begin
+    ShowDlg('写入配置文件失败！');
+  end
+  else
+  begin
+    ShowLog('写入配置文件成功...');
+
+    SyncServerInfo;
+  end;
+end;
+
+procedure TMainForm.btnStartClick(Sender: TObject);
+begin
+  if not StartServer then
+  begin
+    ShowDlg('启动服务器失败！');
+  end
+  else
+  begin
+    ShowLog('正在启动服务器...');
+    SyncServerInfo;
+  end;
+end;
+
+procedure TMainForm.FormShow(Sender: TObject);
+begin
+  Initial;
+end;
+
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  Release;
+end;
+
+procedure TMainForm.Initial;
+begin
+  GlobalSettings := TGlobalSettings.Create;
+  SPLoader := TServerPropertyLoader.Create;
+
+  LoadingSettings;
+  LoadingPropertis(mPropertisFileName);
+end;
+
+procedure TMainForm.Release();
+begin
+  SPLoader.Free;
+  GlobalSettings.Free;
+
+  PV_MAPPING_WORD_DIFFICULTY.Free;
+  PV_MAPPING_WORLD_MODE.Free;
+end;
+
+procedure TMainForm.LoadingSettings;
+begin
+  ShowLog('初始化设置...');
+  mServerFileName := GlobalSettings.GetServerFileName;
+  mPropertisFileName := GlobalSettings.GetPropertiesFileName;
+end;
+
+procedure TMainForm.LoadingPropertis(fn: String);
+var
+  Ret: Boolean;
+begin
+  ShowLog('读取配置文件信息...');
+
+  if fn <> '' then
+  begin
+    Ret := SPLoader.LoadFromFile(fn);
+
+    if Ret then
+      ShowLog('正在载入配置文件...');
+  end
+  else
+  begin
+    ShowLog('配置文件不存在，载入默认配置...');
+  end;
+
+  Render;
+end;
+
+procedure TMainForm.Render;
+begin
+  // 全局设置
+  edServerFile.Text := mServerFileName;
+  edPropertisFile.Text := mPropertisFileName;
+  // 服务器配置信息
+  // edServerAddress.Text := SPLoader.GetPropertyValue(PI_SERVER_IP);
+  edServerAddress.Text := idIPWatcher.LocalIP;
+  edServerPort.Text := SPLoader.GetPropertyValue(PI_SERVER_PORT);
+  edMaxPlayers.Text := SPLoader.GetPropertyValue(PI_SERVER_MAX_PLAERS);
+  edServerDescript.Text := SPLoader.GetPropertyValue(PI_SERVER_DESCRIPTION);
+  // 游戏选项
+  InitComboBox(combMode, PV_MAPPING_WORLD_MODE,
+    StrToInt(SPLoader.GetPropertyValue(PI_WORLD_MODE)));
+  InitComboBox(combDifficult, PV_MAPPING_WORD_DIFFICULTY,
+    StrToInt(SPLoader.GetPropertyValue(PI_WORLD_DIFFICULTY)));
+
+  cboxFriendlyFire.Checked :=
+    StrToBool(SPLoader.GetPropertyValue(PI_GAME_FRIENDLY_FIRE));
+  cboxNether.Checked :=
+    StrToBool(SPLoader.GetPropertyValue(PI_GAME_ALLOW_NETHER));
+  cboxFlight.Checked :=
+    StrToBool(SPLoader.GetPropertyValue(PI_GAME_ALLOW_FLIGHT));
+  cboxMonsters.Checked :=
+    StrToBool(SPLoader.GetPropertyValue(PI_SPAWN_MONSTERS));
+  cboxAnimals.Checked := StrToBool(SPLoader.GetPropertyValue(PI_SPAWN_ANIMALS));
+  cboxNpcs.Checked := StrToBool(SPLoader.GetPropertyValue(PI_SPAWN_NPCS));
+end;
+
+function TMainForm.SavePropertis(): Boolean;
+var
+  svrAddr, svrPort, svrDescript, maxPlayer: String;
+  gameMode, difficult: Integer;
+  bFriendly, bFlight, bNether, bMonsters, bAnimals, bNpcs: Boolean;
+begin
+  Result := False;
+
+  mPropertisFileName := edPropertisFile.Text;
+  if (mPropertisFileName = '') then
+    mPropertisFileName := GlobalSettings.GetPropertiesFileName;
+  if (mPropertisFileName = '') then
+  begin
+    Exit;
+  end;
+
+  svrAddr := edServerAddress.Text;
+  svrPort := edServerPort.Text;
+  svrDescript := edServerDescript.Text;
+  maxPlayer := edMaxPlayers.Text;
+
+  gameMode := combMode.ItemIndex;
+  difficult := combDifficult.ItemIndex;
+
+  bFriendly := cboxFriendlyFire.Checked;
+  bFlight := cboxFlight.Checked;
+  bNether := cboxNether.Checked;
+  bMonsters := cboxMonsters.Checked;
+  bAnimals := cboxAnimals.Checked;
+  bNpcs := cboxNpcs.Checked;
+
+  SPLoader.SetPropertyValue(PI_SERVER_IP, svrAddr);
+  SPLoader.SetPropertyValue(PI_SERVER_PORT, svrPort);
+  SPLoader.SetPropertyValue(PI_SERVER_DESCRIPTION, svrDescript);
+  SPLoader.SetPropertyValue(PI_SERVER_MAX_PLAERS, maxPlayer);
+
+  SPLoader.SetPropertyValue(PI_WORLD_MODE, gameMode);
+  SPLoader.SetPropertyValue(PI_WORLD_DIFFICULTY, difficult);
+
+  SPLoader.SetPropertyValue(PI_GAME_FRIENDLY_FIRE, bFriendly);
+  SPLoader.SetPropertyValue(PI_GAME_ALLOW_FLIGHT, bFlight);
+  SPLoader.SetPropertyValue(PI_GAME_ALLOW_NETHER, bNether);
+  SPLoader.SetPropertyValue(PI_SPAWN_MONSTERS, bMonsters);
+  SPLoader.SetPropertyValue(PI_SPAWN_ANIMALS, bAnimals);
+  SPLoader.SetPropertyValue(PI_SPAWN_NPCS, bNpcs);
+
+  Result := SPLoader.SaveToFile(mPropertisFileName);
+
+  GlobalSettings.SetPropertiesFileName(mPropertisFileName);
+end;
+
+function TMainForm.StartServer(): Boolean;
+var
+  si: TSTARTUPINFO;
+  pi: TProcessInformation;
+  Ret: Boolean;
+begin
+  Result := False;
+
+  if Not SavePropertis Then
+    Exit;
+
+  mServerFileName := edServerFile.Text;
+  if (mServerFileName = '') then
+    mServerFileName := GlobalSettings.GetServerFileName;
+  if (mServerFileName = '') then
+    Exit;
+
+  FillChar(si, SizeOf(STARTUPINFO), #0);
+  FillChar(pi, SizeOf(PROCESS_INFORMATION), #0);
+
+  Ret := CreateProcess('cmd', PChar('/c java -jar "' + mServerFileName + '"'),
+    NIL, NIL, False, 0, NIL, ExtractFileDir(mServerFileName), si, pi);
+  if Ret then
+  begin
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+
+    Result := True;
+  end;
+
+  GlobalSettings.SetServerFileName(mServerFileName);
+end;
+
+procedure TMainForm.InitComboBox(TargetComboBox: TComboBox; Data: TContentValue;
+  defaultIndex: Integer);
+var
+  i, Count: Integer;
+begin
+  if (TargetComboBox.Items.Count = 0) and (Data.Count > 0) then
+  begin
+    Count := Data.Count - 1;
+    for i := 0 to Count do
+    begin
+      TargetComboBox.Items.Add(Data.GetName(i));
+    end;
+  end;
+
+  TargetComboBox.ItemIndex := defaultIndex;
+end;
+
+procedure TMainForm.SyncServerInfo();
+var
+  hThread: THandle;
+  dwThreadId: DWORD;
+begin
+  hThread := CreateThread(NIL, 0, @ThreadProc, NIL, 0, dwThreadId);
+  if hThread <> 0 then
+  begin
+    CloseHandle(hThread);
+  end;
+end;
+
+procedure TMainForm.ShowLog(log: String);
+var
+  Timestamp: TTime;
+begin
+  Timestamp := Time;
+  log := TimeToStr(Timestamp) + ' ' + log;
+
+  memoLogContainer.Lines.Add(log);
+end;
+
+procedure TMainForm.ShowDlg(log: String);
+begin
+  MessageBox(Handle, PChar(log), '提示', MB_OK or MB_ICONINFORMATION);
+end;
+
+end.

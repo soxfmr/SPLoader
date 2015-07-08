@@ -1,0 +1,266 @@
+unit ServerPropertyLoader;
+
+interface
+
+uses
+  System.Classes, System.SysUtils, System.StrUtils, Winapi.Messages,
+  Pair, ContentValue, PropertyInfo;
+
+type
+  TServerPropertyLoader = class(TObject)
+  private
+    mProperties: TContentValue;
+    procedure LoadNormalPropertis();
+    procedure ParsePropertis(propertiesBuffer: TStringList);
+    function ReadProperty(buffer: String): TPair;
+  public
+    constructor Create();
+    destructor Free();
+    function LoadFromFile(path: string): Boolean;
+    function SaveToFile(path: string): Boolean;
+    function GetPropertyValue(key: string): string; overload;
+    function GetPropertyValue(key, defaultValue: string): string; overload;
+    function GetPropertyValue(key, defaultValue: string; mapping: TContentValue)
+      : string; overload;
+    function GetProperties(): TContentValue;
+
+    procedure SetPropertyValue(key, value: String); overload;
+    procedure SetPropertyValue(key: String; value: Integer); overload;
+    procedure SetPropertyValue(key: String; value: Boolean); overload;
+  end;
+
+implementation
+
+constructor TServerPropertyLoader.Create();
+begin
+  mProperties := TContentValue.Create;
+
+  LoadNormalPropertis;
+end;
+
+destructor TServerPropertyLoader.Free();
+begin
+  mProperties.Free;
+end;
+
+procedure TServerPropertyLoader.LoadNormalPropertis;
+begin
+  mProperties.Clear;
+
+  mProperties.Add(PI_WORLD_NAME, PN_WORLD_NAME);
+  mProperties.Add(PI_WORLD_TYPE, PN_WORLD_TYPE);
+  mProperties.Add(PI_WORLD_SEED, PN_WORLD_SEED);
+  mProperties.Add(PI_WORLD_MODE, PN_WORLD_MODE);
+  mProperties.Add(PI_WORLD_MODE_ULTIMATE, PN_WORLD_MODE_ULTIMATE);
+  mProperties.Add(PI_WORLD_MODE_FORCE, PN_WORLD_MODE_FORCE);
+  mProperties.Add(PI_WORLD_DIFFICULTY, PN_WORLD_DIFFICULTY);
+  mProperties.Add(PI_WORLD_GENERATE_STRUCTURES, PN_WORLD_GENERATE_STRUCTURES);
+  mProperties.Add(PI_WORLD_GENERATOR_SETTINGS, PN_WORLD_GENERATOR_SETTINGS);
+  mProperties.Add(PI_WORLD_MAX_BUILD_HEIGHT, PN_WORLD_MAX_BUILD_HEIGHT);
+
+  mProperties.Add(PI_GAME_FRIENDLY_FIRE, PN_GAME_FRIENDLY_FIRE);
+  mProperties.Add(PI_GAME_ALLOW_FLIGHT, PN_GAME_ALLOW_FLIGHT);
+  mProperties.Add(PI_GAME_ALLOW_NETHER, PN_GAME_ALLOW_NETHER);
+  mProperties.Add(PI_GAME_ENABLE_COMMAND_BLOCK, PN_GAME_ENABLE_COMMAND_BLOCK);
+
+  mProperties.Add(PI_SPAWN_ANIMALS, PN_SPAWN_ANIMALS);
+  mProperties.Add(PI_SPAWN_MONSTERS, PN_SPAWN_MONSTERS);
+  mProperties.Add(PI_SPAWN_NPCS, PN_SPAWN_NPCS);
+
+  mProperties.Add(PI_SERVER_IP, PN_SERVER_IP);
+  mProperties.Add(PI_SERVER_PORT, PN_SERVER_PORT);
+  mProperties.Add(PI_SERVER_MAX_PLAERS, PN_SERVER_MAX_PLAERS);
+  mProperties.Add(PI_SERVER_MAX_SINGLE_CONNECTION,
+    PN_SERVER_MAX_SINGLE_CONNECTION);
+  mProperties.Add(PI_SERVER_DESCRIPTION, PN_SERVER_DESCRIPTION);
+  mProperties.Add(PI_SERVER_QUERY, PN_SERVER_QUERY);
+  mProperties.Add(PI_SERVER_QUERY_PORT, PN_SERVER_QUERY_PORT);
+  mProperties.Add(PI_SERVER_REMOTE_ACCESS, PN_SERVER_REMOTE_ACCESS);
+  mProperties.Add(PI_SERVER_REMOTE_ACCESS_PORT, PN_SERVER_REMOTE_ACCESS_PORT);
+  mProperties.Add(PI_SERVER_REMOTE_ACCESS_PASSWORD,
+    PN_SERVER_REMOTE_ACCESS_PASSWORD);
+  mProperties.Add(PI_SERVER_IMPROVE, PN_SERVER_IMPROVE);
+
+  mProperties.Add(PI_OP_LEVEL, PN_OP_LEVEL);
+  mProperties.Add(PI_ONLINE_MODE, PN_ONLINE_MODE);
+  mProperties.Add(PI_VIEW_DISTANCE, PN_VIEW_DISTANCE);
+  mProperties.Add(PI_WHITE_LIST, PN_WHITE_LIST);
+  mProperties.Add(PI_TEXTURE_PACKAGE, PN_TEXTURE_PACKAGE);
+end;
+
+{ ****************** }
+{ 加载配置从指定文件 }
+{ ****************** }
+function TServerPropertyLoader.LoadFromFile(path: string): Boolean;
+var
+  i, Count: Integer;
+  Line: String;
+  fileBuffer: TStringList;
+  propertiesBuffer: TStringList;
+begin
+  Result := False;
+
+  if FileExists(path) = True then
+  begin
+    fileBuffer := TStringList.Create;
+    propertiesBuffer := TStringList.Create;
+    try
+      fileBuffer.LoadFromFile(path);
+
+      if fileBuffer.Count > 0 then
+      begin
+        Count := fileBuffer.Count - 1;
+
+        for i := 0 to Count do
+        begin
+          Line := fileBuffer[i];
+          if (Line.Length > 0) and (Line.IndexOf('#') = -1) then
+            propertiesBuffer.Add(Line);
+        end;
+        // 载入默认选项
+        LoadNormalPropertis;
+        // 合并用户选项
+        ParsePropertis(propertiesBuffer);
+      end;
+
+      Result := True;
+    finally
+      fileBuffer.Free;
+      propertiesBuffer.Free;
+    end;
+  end;
+
+end;
+
+function TServerPropertyLoader.SaveToFile(path: String): Boolean;
+var
+  hFile: TextFile;
+  i, Count: Integer;
+begin
+  Result := False;
+
+  if mProperties.Count > 0 then
+  begin
+    AssignFile(hFile, path);
+    try
+      Reset(hFile);
+
+      Count := mProperties.Count - 1;
+      for i := 0 to Count do
+      begin
+        Writeln(hFile, mProperties.Get(i));
+      end;
+
+      Result := True;
+    finally
+      CloseFile(hFile);
+    end;
+  end;
+end;
+
+procedure TServerPropertyLoader.SetPropertyValue(key, value: String);
+begin
+  if value <> '' then
+    mProperties.Add(key, value);
+end;
+
+procedure TServerPropertyLoader.SetPropertyValue(key: String; value: Bolean);
+begin
+  if value <> '' then
+    mProperties.Add(key, value);
+end;
+
+procedure TServerPropertyLoader.SetPropertyValue(key, value: String);
+begin
+  if value <> '' then
+    mProperties.Add(key, value);
+end;
+
+{ ******************** }
+{ 获取所有属性的键和值 }
+{ ******************** }
+function TServerPropertyLoader.GetProperties(): TContentValue;
+begin
+  Result := mProperties;
+end;
+
+{ ****************** }
+{ 获取指定键的值 }
+{ ****************** }
+function TServerPropertyLoader.GetPropertyValue(key: string): string;
+begin
+  Result := GetPropertyValue(key, '', NIL);
+end;
+
+function TServerPropertyLoader.GetPropertyValue(key, defaultValue
+  : string): string;
+begin
+  Result := GetPropertyValue(key, defaultValue, NIL);
+end;
+
+function TServerPropertyLoader.GetPropertyValue(key, defaultValue: string;
+  mapping: TContentValue): string;
+var
+  Ret: String;
+begin
+  Ret := defaultValue;
+
+  if mProperties.ContaineKey(key) then
+  begin
+    // Give the mapping value of the content of the property
+    if mapping <> NIL then
+    begin
+      Ret := mapping.Get(key);
+    end
+    else
+      Ret := mProperties.Get(key);
+  end;
+
+  Result := Ret;
+end;
+
+{ ******************** }
+{ 从配置缓冲内加载属性 }
+{ ******************** }
+procedure TServerPropertyLoader.ParsePropertis(propertiesBuffer: TStringList);
+var
+  i, Count: Integer;
+  Pair: TPair;
+begin
+  if (propertiesBuffer <> NIL) and (propertiesBuffer.Count > 0) then
+  begin
+    Count := propertiesBuffer.Count - 1;
+    for i := 0 to Count do
+    begin
+      Pair := ReadProperty(propertiesBuffer[i]);
+
+      if (Pair.key.Length > 0) and (Pair.value.Length > 0) then
+        mProperties.Add(Pair.key, Pair.value);
+
+      Pair.Free;
+    end;
+  end;
+end;
+
+function TServerPropertyLoader.ReadProperty(buffer: String): TPair;
+var
+  Pair: TPair;
+  offset: Integer;
+begin
+  Pair := NIL;
+
+  if (buffer <> '') then
+  begin
+    offset := Pos('=', buffer);
+    if offset <> -1 then
+    begin
+      Pair := TPair.Create();
+      Pair.key := Copy(buffer, 0, offset - 1);
+      Pair.value := Copy(buffer, offset + 1, buffer.Length - offset);
+    end;
+  end;
+
+  Result := Pair;
+end;
+
+end.
